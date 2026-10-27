@@ -1,0 +1,69 @@
+name: pr-sentinel
+description: 'Revisor de Pull Requests com IA (Claude): resumo, riscos, sugestões e testes faltando.'
+author: LeonardoBoni-018
+branding:
+  icon: shield
+  color: blue
+
+inputs:
+  anthropic-api-key:
+    description: Chave da API da Anthropic (guarde em secrets).
+    required: true
+  github-token:
+    description: Token com permissões pull-requests:write e contents:read.
+    required: false
+    default: ${{ github.token }}
+  model:
+    description: Modelo do Claude.
+    required: false
+    default: claude-sonnet-5-5
+  language:
+    description: Idioma da revisão.
+    required: false
+    default: pt-BR
+  min-severity:
+    description: Severidade mínima dos achados (info, warning ou critical).
+    required: false
+    default: info
+  on-error:
+    description: O que fazer se a IA falhar (comment, silent ou fail).
+    required: false
+    default: comment
+  max-diff-bytes:
+    description: Tamanho máximo do diff enviado à IA, em bytes.
+    required: false
+    default: '120000'
+  max-output-tokens:
+    description: Máximo de tokens de saída por revisão.
+    required: false
+    default: '8192'
+  skip-label:
+    description: Label que desativa a revisão do PR.
+    required: false
+    default: skip-review
+  skip-bots:
+    description: Pular PRs abertos por bots.
+    required: false
+    default: 'true'
+  ignore:
+    description: Globs adicionais a ignorar, separados por vírgula.
+    required: false
+    default: ''
+
+runs:
+  using: docker
+  image: Dockerfile
+  args:
+    - action
+  env:
+    ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
+    GITHUB_TOKEN: ${{ inputs.github-token }}
+    PR_SENTINEL_MODEL: ${{ inputs.model }}
+    PR_SENTINEL_LANGUAGE: ${{ inputs.language }}
+    PR_SENTINEL_MIN_SEVERITY: ${{ inputs.min-severity }}
+    PR_SENTINEL_ON_ERROR: ${{ inputs.on-error }}
+    PR_SENTINEL_MAX_DIFF_BYTES: ${{ inputs.max-diff-bytes }}
+    PR_SENTINEL_MAX_OUTPUT_TOKENS: ${{ inputs.max-output-tokens }}
+    PR_SENTINEL_SKIP_LABEL: ${{ inputs.skip-label }}
+    PR_SENTINEL_SKIP_BOTS: ${{ inputs.skip-bots }}
+    PR_SENTINEL_IGNORE: ${{ inputs.ignore }}

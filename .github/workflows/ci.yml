@@ -27,7 +27,10 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      - run: make cover
+      - name: Testes com race detector e cobertura
+        run: make cover
+      - name: Exigir cobertura mínima de 70% no núcleo
+        run: make cover-check
 
   build:
     runs-on: ubuntu-latest
@@ -37,3 +40,5 @@ jobs:
         with:
           go-version-file: go.mod
       - run: make build
+      - name: Build da imagem Docker
+        run: docker build -t pr-sentinel:ci .

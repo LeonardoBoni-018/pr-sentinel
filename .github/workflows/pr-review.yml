@@ -1,0 +1,22 @@
+# Dogfooding: o pr-sentinel revisa os PRs do próprio repositório.
+name: PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+# Mínimo necessário: ler o código e comentar no PR.
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  review:
+    # PRs vindos de forks não recebem secrets, então não há como revisar.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./
+        with:
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
