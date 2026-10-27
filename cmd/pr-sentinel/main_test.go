@@ -5,6 +5,7 @@ import (
 	"context"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/LeonardoBoni-018/pr-sentinel/internal/config"
 )
@@ -47,6 +48,42 @@ func TestActionWithoutKeysFails(t *testing.T) {
 		t.Fatalf("err = %v", err)
 	}
 }
+
+func TestServerValidation(t *testing.T) {
+	env := map[string]string{"ANTHROPIC_API_KEY": "k", "GITHUB_TOKEN": "t"}
+	var out, errOut bytes.Buffer
+	err := run(context.Background(), []string{"server"}, func(k string) string { return env[k] }, &out, &errOut)
+	if err == nil || !strings.Contains(err.Error(), "WEBHOOK_SECRET") {
+		t.Fatalf("err = %v", err)
+	}
+}
+
+func TestServerStartsAndStops(t *testing.T) {
+	env := map[string]string{
+		"ANTHROPIC_API_KEY": "k", "GITHUB_TOKEN": "t", "WEBHOOK_SECRET": "s", "PR_SENTINEL_ADDR": "127.0.0.1:0",
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	var out, errOut bytes.Buffer
+	go func() {
+		done <- run(ctx, []string{"server"}, func(k string) string { return env[k] }, &out, &syncBuf{&errOut})
+	}()
+	time.Sleep(200 * time.Millisecond)
+	cancel()
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatalf("err = %v", err)
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("servidor não encerrou")
+	}
+}
+
+// syncBuf evita corrida entre o logger do servidor e a leitura no teste.
+type syncBuf struct{ b *bytes.Buffer }
+
+func (s *syncBuf) Write(p []byte) (int, error) { return len(p), nil }
 
 func TestBuildService(t *testing.T) {
 	svc := buildService(func(string) string { return "" }, nil)(config.Defaults())

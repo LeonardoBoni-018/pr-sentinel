@@ -7,12 +7,15 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"net"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
 	"github.com/LeonardoBoni-018/pr-sentinel/internal/action"
+	"github.com/LeonardoBoni-018/pr-sentinel/internal/config"
+	"github.com/LeonardoBoni-018/pr-sentinel/internal/server"
 )
 
 var version = "dev"
@@ -45,7 +48,28 @@ func run(ctx context.Context, args []string, getenv func(string) string, stdout,
 		return action.Run(ctx, action.Deps{
 			Getenv: getenv, ReadFile: os.ReadFile, Build: buildService(getenv, log), Log: log,
 		})
+	case "server":
+		return runServer(ctx, getenv, stderr)
 	default:
 		return fmt.Errorf("subcomando desconhecido %q", args[0])
 	}
+}
+
+func runServer(ctx context.Context, getenv func(string) string, stderr io.Writer) error {
+	cfg, err := config.FromEnv(getenv)
+	if err != nil {
+		return err
+	}
+	if err := cfg.Validate(config.ModeServer); err != nil {
+		return err
+	}
+	log := slog.New(slog.NewJSONHandler(stderr, nil))
+	ln, err := net.Listen("tcp", cfg.Addr)
+	if err != nil {
+		return fmt.Errorf("escutando em %s: %w", cfg.Addr, err)
+	}
+	srv := server.New(server.Options{
+		Secret: cfg.WebhookSecret, Reviewer: buildService(getenv, log)(cfg), Log: log, Version: version,
+	})
+	return srv.Serve(ctx, ln)
 }
