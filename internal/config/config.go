@@ -90,7 +90,7 @@ func Defaults() Config {
 	return Config{
 		Model:           "claude-sonnet-5-5",
 		ClaudeTimeout:   120 * time.Second,
-		MaxOutputTokens: 4096,
+		MaxOutputTokens: 8192, // folga para o thinking adaptativo, que consome tokens de saída
 		MaxDiffBytes:    120_000,
 		Language:        "pt-BR",
 		MinSeverity:     SeverityInfo,
