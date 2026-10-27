@@ -23,6 +23,9 @@ type prPayload struct {
 	Head   struct {
 		SHA string `json:"sha"`
 	} `json:"head"`
+	Base struct {
+		SHA string `json:"sha"`
+	} `json:"base"`
 	User struct {
 		Login string `json:"login"`
 		Type  string `json:"type"`
@@ -35,7 +38,7 @@ type prPayload struct {
 func (p prPayload) toPullRequest() PullRequest {
 	pr := PullRequest{
 		Number: p.Number, Title: p.Title, Body: p.Body, State: p.State, Draft: p.Draft,
-		HeadSHA: p.Head.SHA, Author: p.User.Login, AuthorType: p.User.Type,
+		HeadSHA: p.Head.SHA, BaseSHA: p.Base.SHA, Author: p.User.Login, AuthorType: p.User.Type,
 	}
 	for _, l := range p.Labels {
 		pr.Labels = append(pr.Labels, l.Name)

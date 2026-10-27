@@ -47,13 +47,13 @@ func serve(t *testing.T, handler func(w http.ResponseWriter, r *http.Request, n 
 func TestGetPullRequest(t *testing.T) {
 	c, cp, _, _ := serve(t, func(w http.ResponseWriter, _ *http.Request, _ int) {
 		_, _ = io.WriteString(w, `{"number":7,"title":"T","body":null,"state":"open","draft":true,
-			"head":{"sha":"abc"},"user":{"login":"dependabot[bot]","type":"Bot"},"labels":[{"name":"skip-review"},{"name":"x"}]}`)
+			"head":{"sha":"abc"},"base":{"sha":"base1"},"user":{"login":"dependabot[bot]","type":"Bot"},"labels":[{"name":"skip-review"},{"name":"x"}]}`)
 	})
 	got, err := c.GetPullRequest(context.Background(), pr)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got.HeadSHA != "abc" || got.AuthorType != "Bot" || !got.Draft || got.Title != "T" || got.Body != "" ||
+	if got.HeadSHA != "abc" || got.BaseSHA != "base1" || got.AuthorType != "Bot" || !got.Draft || got.Title != "T" || got.Body != "" ||
 		len(got.Labels) != 2 || got.Labels[0] != "skip-review" {
 		t.Fatalf("got %+v", got)
 	}

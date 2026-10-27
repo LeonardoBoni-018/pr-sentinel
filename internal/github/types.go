@@ -30,6 +30,7 @@ type PullRequest struct {
 	State      string
 	Draft      bool
 	HeadSHA    string
+	BaseSHA    string // a config do repo é lida daqui, nunca do head do PR
 	Author     string
 	AuthorType string // "User", "Bot"...
 	Labels     []string
